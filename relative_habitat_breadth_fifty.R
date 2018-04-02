@@ -44,6 +44,18 @@ ims <- left_join(spp_mean, rocorr, by = "AOU")
 plot(ims$new_Im, ims$mean_Im_index, ylim = c(0,1), xlim = c(0,1))
 abline(0,1)
 
+# Route level ranks
+
+routeranks <- data %>%
+  select(stateroute, year, AOU, Im) %>%
+  group_by(AOU, year) %>%
+  mutate(Im_rank = rank(Im), valid_Ims = length(Im != Inf), 
+         Im_index = ifelse(Im != Inf, Im_rank/valid_Ims, NA))
+
+route_mean <- routeranks %>%
+  group_by(stateroute) %>%
+  summarize(mean_Im = mean(Im_index, na.rm = T))
+
 # Get land cover data
 setwd("C:/Users/gdicecco/Desktop/git/fifty-stop-habitat-breadth/")
 nlcd <- read.csv("bbs_route_nlcd.csv")
