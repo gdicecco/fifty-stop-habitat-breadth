@@ -13,8 +13,8 @@
 %          CALCULATED FOR EACH ROUTE ACROSS YEARS, AND THEN A SPECIES-
 %          LEVEL MEAN IS CALCULATED BASED ON ROUTE MEANS.
 
-data = dlmread('H:\BBS Data\Raw Data\2005Data\fiftystops\fiftystopdata0305.csv',',');
-stateroute = data(:,1)*1000 + data(:,2);
+data = readtable('2010_fiftystopdata.csv');
+stateroute = data{:,3}*1000 + data{:,4};
 data = [stateroute data(:,3:54)];
 Ntot = sum(data(:,4:53),2);
 mean_stopN = mean(data(:,4:53),2);
@@ -61,13 +61,13 @@ for i=1:num_routes;
     end
 end
 
-'converting data to short form matrix'
+%converting data to short form matrix
 Im_matrix = nan(num_spp,num_routes,3); %creates emptry matrix filled with NaNs
 %convert 'newdata' to a species x route x year matrix
 for i=1:length(newdata);
     Im_matrix(find(unique_spp==newdata(i,3)),find(unique_routes==newdata(i,1)),newdata(i,2)-2002) = newdata(i,7);
 end
-'calculating means'
+%'calculating means'
 Im_matrix2 = nanmean(Im_matrix,3); %takes the mean, excluding NaN values, across years
 Spp_Ims = [unique_spp nanmean(Im_matrix2,2)]; %takes the mean of the means, excluding NaNs, across sites
 

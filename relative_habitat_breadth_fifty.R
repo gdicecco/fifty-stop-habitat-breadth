@@ -8,7 +8,7 @@ library(dplyr)
 setwd("//BioArk//HurlbertLab//Databases//BBS//FiftyStopData//")
 data.long <- read.csv("2010_fiftystopdata.csv")
 data <- data.long %>%
-  filter(year >= 2005 & year <= 2007) %>%
+  filter(year <= 2005 & year <= 2003) %>%
   select(-RouteDataID, -countrynum, -RPID)
 
 data$stateroute <- data$statenum*1000 + data$Route
@@ -25,7 +25,7 @@ Im <- Im/10000
 data$Im <- Im
 #Some Im values are Inf
 
-newdata2 <- data %>%
+newdata <- data %>%
   select(stateroute, year, AOU, Im) %>%
   group_by(stateroute, year) %>%
   mutate(Im_rank = rank(Im), valid_Ims = length(Im != Inf), 
@@ -34,4 +34,17 @@ newdata2 <- data %>%
 spp_mean <- newdata %>%
   group_by(AOU) %>%
   summarize(mean_Im_index = mean(Im_index, na.rm = T))
-  
+
+#read in original values
+setwd("C:/Users/gdicecco/Desktop/")  
+rocorr <- read.csv("Master_RO_Correlates_20110610.csv")
+
+ims <- left_join(spp_mean, rocorr, by = "AOU")
+
+plot(ims$new_Im, ims$mean_Im_index, ylim = c(0,1), xlim = c(0,1))
+abline(0,1)
+
+# Get land cover data
+setwd("C:/Users/gdicecco/Desktop/git/fifty-stop-habitat-breadth/")
+nlcd <- read.csv("bbs_route_nlcd.csv")
+config <- read.csv("BBS_route_landcover_configuration_metrics.csv")
