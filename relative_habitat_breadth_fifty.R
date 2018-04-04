@@ -5,16 +5,23 @@
   
 library(dplyr)
 
-setwd("//BioArk//HurlbertLab//Databases//BBS//FiftyStopData//")
-data.long <- read.csv("2010_fiftystopdata.csv")
-data <- data.long %>%
-  filter(year <= 2005 & year <= 2003) %>%
-  select(-RouteDataID, -countrynum, -RPID)
+setwd("/Volumes/hurlbertlab/Databases/BBS/FiftyStopData/")
+#setwd("//BioArk//HurlbertLab//Databases//BBS//FiftyStopData//")
+setwd("/Users/gracedicecco/Desktop/")
+#data.long <- read.csv("2010_fiftystopdata.csv")
+data.long <- read.csv("tenstopdata04.csv", header = F)
+#data <- data.long %>%
+#  filter(year <= 2005 & year <= 2003) %>%
+ # select(-RouteDataID, -countrynum, -RPID)
+colnames(data.long) <- c("statenum", "Route", "year", "AOU", "stop1", "stop2", "stop3", "stop4", "stop5")
+#data <- data.long %>%
+ # select(-RouteDataID, -countrynum, -RPID)
+data <- data.long
 
 data$stateroute <- data$statenum*1000 + data$Route
-data$Ntot <- rowSums(data[,5:54])
-data$mean_stopN <- apply(data[,5:54], 1, mean)
-data$var_stopN <- apply(data[,5:54], 1, function(x) sd(x)^2)
+data$Ntot <- rowSums(data[,5:9])
+data$mean_stopN <- apply(data[,5:9], 1, mean)
+data$var_stopN <- apply(data[,5:9], 1, function(x) sd(x)^2)
 part1 <- data$Ntot/(data$Ntot-1)
 part2 <- data$mean_stopN^-1
 part3 <- (data$var_stopN/data$mean_stopN) + data$mean_stopN - 1
@@ -36,10 +43,12 @@ spp_mean <- newdata %>%
   summarize(mean_Im_index = mean(Im_index, na.rm = T))
 
 #read in original values
-setwd("C:/Users/gdicecco/Desktop/")  
+setwd("/Volumes/hurlbertlab/DiCecco/")
+#setwd("C:/Users/gdicecco/Desktop/")  
 rocorr <- read.csv("Master_RO_Correlates_20110610.csv")
 
-ims <- left_join(spp_mean, rocorr, by = "AOU")
+ims <- left_join(rocorr, spp_mean, by = "AOU")
+imssorted <- ims %>% arrange(mean_Im_index) %>% select(AOU, CommonName, mean_Im_index, new_Im)
 
 plot(ims$new_Im, ims$mean_Im_index, ylim = c(0,1), xlim = c(0,1))
 abline(0,1)
