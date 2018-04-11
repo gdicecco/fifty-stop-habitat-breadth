@@ -7,7 +7,7 @@ library(dplyr)
 
 setwd("/Volumes/hurlbertlab/Databases/BBS/FiftyStopData/")
 #setwd("//BioArk//HurlbertLab//Databases//BBS//FiftyStopData//")
-setwd("/Users/gracedicecco/Desktop/")
+setwd("/Users/gracedicecco/Desktop/git/fifty-stop/")
 #data.long <- read.csv("2010_fiftystopdata.csv")
 data.long <- read.csv("tenstopdata04.csv", header = F)
 #data <- data.long %>%
@@ -30,8 +30,8 @@ Im <- 10000*Im
 Im <- round(Im)
 Im <- Im/10000
 data$Im <- Im
-#Some Im values are Inf
 
+## dplyr to get mean Ims
 newdata <- data %>%
   select(stateroute, year, AOU, Im) %>%
   group_by(stateroute, year) %>%
@@ -42,13 +42,43 @@ spp_mean <- newdata %>%
   group_by(AOU) %>%
   summarize(mean_Im_index = mean(Im_index, na.rm = T))
 
+## for loop to get mean Ims
+newdata2 <- select(data, stateroute, year, AOU, Im)
+
+unique_routes <- unique(newdata2$stateroute)
+num_routes <- length(unique_routes)
+unique_spp <- unique(newdata2$AOU)
+num_spp <- length(unique_spp)
+
+rte_results <- data.frame(stateroute = NA, year = NA, AOU = NA, Im = NA, Im_rank = NA, Im_index = NA)
+for(i in 1:num_routes) {
+  for(k in 2004) {
+    rte_rows <- filter(newdata2, stateroute == unique_routes[i] & year == k)
+    if(nrow(rte_rows) > 0) {
+      rte_rows$Im_rank <- rank(rte_rows$Im)
+      valid_Ims <- length(rte_rows$Im != Inf)
+      rte_rows$Im_index <- rte_rows$Im_rank/valid_Ims
+      rte_results <- rbind(rte_results, rte_rows)
+    }
+  }
+}
+rte_results <- rte_results[-1, ]
+
+# flag Inf Im_index as NA
+rte_results$Im_index[which(rte_results$Im == Inf)] <- NA
+
+spp_mean <- rte_results %>%
+  group_by(AOU) %>%
+  summarize(mean_Im_index = mean(Im_index, na.rm = T))
+
 #read in original values
 setwd("/Volumes/hurlbertlab/DiCecco/")
 #setwd("C:/Users/gdicecco/Desktop/")  
 rocorr <- read.csv("Master_RO_Correlates_20110610.csv")
 
+# compare with dplyr
 ims <- left_join(rocorr, spp_mean, by = "AOU")
-imssorted <- ims %>% arrange(mean_Im_index) %>% select(AOU, CommonName, mean_Im_index, new_Im)
+imssorted <- ims %>% arrange(mean_Im_index) %>% select(AOU, CommonName, mean_Im_index, Mean_Rel_Im)
 
 plot(ims$new_Im, ims$mean_Im_index, ylim = c(0,1), xlim = c(0,1))
 abline(0,1)
