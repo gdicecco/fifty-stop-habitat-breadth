@@ -90,6 +90,13 @@ length(unique(route_data$RT..NO.))
 library(ggplot2)
 theme_set(theme_bw())
 
+ggplot(data, aes(x = Im)) + geom_histogram() + geom_vline(xintercept = 1, color = "blue") + ylab("Frequency")
+# Most species are more aggregated than expected from random distribution
+
+# Summary plots about data
+ggplot(route_data, aes(x = mean_Im)) + geom_histogram()
+
+# Compare Im with landscape configuration metrics
 pdens_mod <- lm(route_data$mean_Im ~ route_data$Patch.Density)
 ggplot(route_data, aes(x = Patch.Density, y = mean_Im)) + geom_point(pch = 1) + xlab("Patch Density") +
   ylab("Route Im") + geom_smooth(method = "lm", se = F)
