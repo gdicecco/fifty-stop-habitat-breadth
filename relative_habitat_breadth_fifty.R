@@ -2,14 +2,14 @@
 
 library(dplyr)
 
-#setwd("/Volumes/hurlbertlab/Databases/BBS/FiftyStopData/") # Mac
-setwd("//BioArk//HurlbertLab//Databases//BBS//2017//") # PC
+setwd("/Volumes/hurlbertlab/Databases/BBS/2017/") # Mac
+#setwd("//BioArk//HurlbertLab//Databases//BBS//2017//") # PC
 data.long <- read.csv("bbs_counts_20170712.csv")
 weather <- read.csv("bbs_weather_20170712.csv")
 
 # read in original values
-#setwd("/Volumes/hurlbertlab/DiCecco/")
-setwd("C:/Users/gdicecco/Desktop/")  
+setwd("/Volumes/hurlbertlab/DiCecco/")
+#setwd("C:/Users/gdicecco/Desktop/")  
 rocorr <- read.csv("Master_RO_Correlates_20110610.csv")
 
 species <- unique(rocorr$AOU)
@@ -76,27 +76,31 @@ route_mean <- routeranks %>%
 ## http://esapubs.org/archive/ecol/E093/215/metadata.php
 ## Land cover - also has aggregation index for each route
 
-setwd("C:/Users/gdicecco/Desktop/git/fifty-stop-habitat-breadth/")
+setwd("/Users/gracedicecco/Desktop/git/fifty-stop/")
+#setwd("C:/Users/gdicecco/Desktop/git/fifty-stop-habitat-breadth/")
 nlcd <- read.csv("bbs_route_nlcd.csv")
 config <- read.csv("BBS_route_landcover_configuration_metrics.csv")
 
 # Plots comparing route species aggregation to landscape fragmentation indices
 
-route_data <- left_join(route_mean, config, by = c("stateroute" = "RT..NO."))
-length(unique(route_data$stateroute))
-#3318 routes
+route_data <- na.omit(left_join(config, route_mean, by = c("RT..NO." = "stateroute"))) #merge routes in common
+length(unique(route_data$RT..NO.))
+#2893 routes in common
+
+library(ggplot2)
+theme_set(theme_bw())
 
 pdens_mod <- lm(route_data$mean_Im ~ route_data$Patch.Density)
-plot(route_data$Patch.Density, route_data$mean_Im, xlab = "Patch Density", ylab = "Route Im")
-abline(pdens_mod, col = "blue", lwd = 2)
+ggplot(route_data, aes(x = Patch.Density, y = mean_Im)) + geom_point(pch = 1) + xlab("Patch Density") +
+  ylab("Route Im") + geom_smooth(method = "lm", se = F)
 
 psize_mod <- lm(route_data$mean_Im ~ route_data$Largest.Patch.Index)
-plot(route_data$Largest.Patch.Index, route_data$mean_Im, xlab = "Largest Patch Index", ylab = "Route Im")
-abline(psize_mod, col = "blue", lwd = 2)
+ggplot(route_data, aes(x = Largest.Patch.Index, y = mean_Im)) + geom_point(pch = 1) + xlab("Largest Patch Index") +
+  ylab("Route Im") + geom_smooth(method = "lm", se = F)
 
 agg_mod <- lm(route_data$mean_Im ~ route_data$Aggregation.Index)
-plot(route_data$Aggregation.Index, route_data$mean_Im, xlab = "Aggregation Index", ylab = "Route Im")
-abline(agg_mod, col = "blue", lwd = 2)
+ggplot(route_data, aes(x = Aggregation.Index, y = mean_Im)) + geom_point(pch = 1) + xlab("Aggregation Index") +
+  ylab("Route Im") + geom_smooth(method = "lm", se = F)
 
-cor <- cor(na.omit(route_data[, c("mean_Im", "Patch.Density", "Largest.Patch.Index", "Aggregation.Index")]))
+cor <- cor(route_data[, c("mean_Im", "Patch.Density", "Largest.Patch.Index", "Aggregation.Index")])
 round(cor, 3)
