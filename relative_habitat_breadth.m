@@ -12,6 +12,8 @@ data = dlmread('fiftystopdata04.csv',',');
 stateroute = data(:,1)*1000 + data(:,2);
 data = [stateroute data(:,3:54)];
 Ntot = sum(data(:,4:53),2);
+
+
 mean_stopN = mean(data(:,4:53),2);
 var_stopN = std(data(:,4:53),0,2).^2;
 part1 = Ntot./(Ntot-1);
